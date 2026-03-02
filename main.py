@@ -11,7 +11,6 @@ import re
 
 logging.basicConfig(filename="app.log", level=logging.INFO)
 
-# --- CONFIG ---
 with open("config.json", encoding="utf-8") as f:
     config = json.load(f)
 
@@ -23,7 +22,6 @@ app = FastAPI()
 recording_process = None
 current_output_file = None
 
-# ✅ PyInstaller uchun ffmpeg path
 def get_ffmpeg_path():
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, "ffmpeg.exe")
@@ -41,7 +39,6 @@ def get_default_mic():
         )
         output = result.stderr.decode(errors="ignore")
 
-        # faqat audio devices
         audio_mics = re.findall(r'"(.*?)"\s+\(audio\)', output)
 
         if audio_mics:
@@ -55,7 +52,6 @@ def get_default_mic():
         return None
 
 
-# --- UPLOAD ---
 async def send_to_server(filepath: str):
     try:
         if not os.path.exists(filepath):
@@ -79,7 +75,6 @@ async def send_to_server(filepath: str):
         logging.error(f"Upload xato: {e}")
 
 
-# ▶ START
 @app.post("/start")
 def start_recording():
     global recording_process, current_output_file
@@ -121,7 +116,6 @@ def start_recording():
     return {"status": "recording started", "filename": current_output_file}
 
 
-# ⏹ STOP
 @app.post("/stop")
 def stop_recording(background_tasks: BackgroundTasks):
     global recording_process, current_output_file
@@ -148,7 +142,6 @@ def stop_recording(background_tasks: BackgroundTasks):
     }
 
 
-# 📊 STATUS
 @app.get("/status")
 def status():
     return {
@@ -157,7 +150,6 @@ def status():
     }
 
 
-# 🔹 TEST MICS
 @app.get("/mics")
 def get_mics():
     try:
@@ -173,6 +165,5 @@ def get_mics():
         return {"error": str(e)}
 
 
-# 🚀 RUN
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=PORT, log_config=None)
