@@ -65,7 +65,7 @@ async def send_to_server(filepath: str):
         async with httpx.AsyncClient(timeout=None) as client:
             with open(filepath, "rb") as f:
                 files = {
-                    "file": (os.path.basename(filepath), f, "audio/wav")
+                    "file": (os.path.basename(filepath), f, "audio/mpeg")
                 }
                 response = await client.post(UPLOAD_URL, files=files)
 
@@ -92,7 +92,7 @@ def start_recording():
         return {"status": "no microphone detected"}
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    current_output_file = f"record_{timestamp}.wav"
+    current_output_file = f"record_{timestamp}.mp3"
 
     command = [
         FFMPEG_PATH,
@@ -100,6 +100,8 @@ def start_recording():
         "-i", f"audio={MIC_NAME}",
         "-ac", "1",
         "-ar", "44100",
+        "-codec:a", "libmp3lame",
+        "-b:a", "128k",
         "-y",
         current_output_file
     ]
