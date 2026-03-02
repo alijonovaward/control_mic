@@ -1,3 +1,1 @@
-pyinstaller --onefile --console --hidden-import uvicorn main.py 
-
- ffmpeg -list_devices true -f dshow -i dummy        
+pyinstaller --onefile --noconsole --hidden-import uvicorn --add-binary "ffmpeg.exe;." main.py
