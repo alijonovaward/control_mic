@@ -21,6 +21,7 @@ app = FastAPI()
 
 recording_process = None
 current_output_file = None
+current_record_id = None
 
 def get_ffmpeg_path():
     if hasattr(sys, "_MEIPASS"):
@@ -76,8 +77,9 @@ async def send_to_server(filepath: str):
 
 
 @app.post("/start")
-def start_recording():
-    global recording_process, current_output_file
+def start_recording(record_id: str):
+    global recording_process, current_output_file, current_record_id
+
     MIC_NAME = get_default_mic()
 
     if recording_process:
@@ -86,8 +88,9 @@ def start_recording():
     if not MIC_NAME:
         return {"status": "no microphone detected"}
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    current_output_file = f"record_{timestamp}.mp3"
+    current_record_id = record_id  # 🔥 id ni saqlaymiz
+
+    current_output_file = f"{record_id}.mp3"  # 🔥 filename o‘zgardi
 
     command = [
         FFMPEG_PATH,
@@ -107,18 +110,21 @@ def start_recording():
         command,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        stdin=subprocess.PIPE,   # 🔥 muhim
+        stdin=subprocess.PIPE,
         creationflags=CREATE_NO_WINDOW
     )
 
     logging.info(f"Recording started: {current_output_file}")
 
-    return {"status": "recording started", "filename": current_output_file}
-
+    return {
+        "status": "recording started",
+        "filename": current_output_file,
+        "record_id": current_record_id   # 🔥 qaytaramiz
+    }
 
 @app.post("/stop")
 def stop_recording(background_tasks: BackgroundTasks):
-    global recording_process, current_output_file
+    global recording_process, current_output_file, current_record_id
 
     if not recording_process:
         return {"status": "not recording"}
@@ -138,9 +144,9 @@ def stop_recording(background_tasks: BackgroundTasks):
 
     return {
         "status": "recording stopped",
-        "file": current_output_file
+        "file": current_output_file,
+        "record_id": current_record_id   # 🔥 id ni ham qaytaramiz
     }
-
 
 @app.get("/status")
 def status():
