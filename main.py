@@ -53,7 +53,7 @@ def get_default_mic():
         return None
 
 
-async def send_to_server(filepath: str):
+async def send_to_server(filepath: str, record_id: str):
     try:
         if not os.path.exists(filepath):
             logging.error("File topilmadi")
@@ -64,11 +64,14 @@ async def send_to_server(filepath: str):
                 files = {
                     "file": (os.path.basename(filepath), f, "audio/mpeg")
                 }
-                response = await client.post(UPLOAD_URL, files=files)
+                data = {"record_id": record_id}
+
+                response = await client.post(UPLOAD_URL, files=files, data=data)
 
         if response.status_code == 200:
-            logging.info(f"Yuborildi: {filepath}")
-            os.remove(filepath)
+            logging.info(f"Yuborildi: {filepath} with record_id={record_id}")
+            rm_path = os.path.join(os.getcwd(), filepath)
+            os.remove(rm_path)
         else:
             logging.error(f"Server xato: {response.status_code} {response.text}")
 
@@ -117,6 +120,7 @@ def start_recording(record_id: str):
     logging.info(f"Recording started: {current_output_file}")
 
     return {
+        "status_code": 200,
         "status": "recording started",
         "filename": current_output_file,
         "record_id": current_record_id   # 🔥 qaytaramiz
@@ -138,14 +142,16 @@ def stop_recording(background_tasks: BackgroundTasks):
         recording_process.kill()
 
     recording_process = None
-    background_tasks.add_task(send_to_server, current_output_file)
+    # record_id ni ham background task ga uzatamiz
+    background_tasks.add_task(send_to_server, current_output_file, current_record_id)
 
-    logging.info(f"Recording stopped: {current_output_file}")
+    logging.info(f"Recording stopped: {current_output_file} with record_id={current_record_id}")
 
     return {
+        "status_code": 200,
         "status": "recording stopped",
         "file": current_output_file,
-        "record_id": current_record_id   # 🔥 id ni ham qaytaramiz
+        "record_id": current_record_id
     }
 
 @app.get("/status")
