@@ -89,7 +89,7 @@ def start_recording(record_id: str):
         return {"status": "already recording"}
 
     if not MIC_NAME:
-        return {"status": "no microphone detected"}
+        return {"status_code": 201, "status": "no microphone detected"}
 
     current_record_id = record_id  # 🔥 id ni saqlaymiz
 
